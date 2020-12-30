@@ -1,3 +1,4 @@
+const c = @import("std").c;
 usingnamespace @import("zamqp.zig");
 
 // Connection
@@ -9,13 +10,13 @@ pub extern fn amqp_destroy_connection(state: *connection_state_t) status_t;
 pub extern fn amqp_login(state: *connection_state_t, vhost: [*:0]const u8, channel_max: c_int, frame_max: c_int, heartbeat: c_int, sasl_method: sasl_method_t, ...) RpcReply;
 pub extern fn amqp_maybe_release_buffers(state: *connection_state_t) void;
 pub extern fn amqp_get_rpc_reply(state: *connection_state_t) RpcReply;
-pub extern fn amqp_simple_wait_frame_noblock(state: *connection_state_t, decoded_frame: *Frame, tv: ?*timeval_t) status_t;
-pub extern fn amqp_consume_message(state: *connection_state_t, envelope: *Envelope, timeout: ?*timeval_t, flags_t: c_int) RpcReply;
+pub extern fn amqp_simple_wait_frame_noblock(state: *connection_state_t, decoded_frame: *Frame, tv: ?*c.timeval) status_t;
+pub extern fn amqp_consume_message(state: *connection_state_t, envelope: *Envelope, timeout: ?*c.timeval, flags_t: c_int) RpcReply;
 
 // Socket
 pub const socket_t = opaque {};
 
-pub extern fn amqp_socket_open(self: *socket_t, host: [*:0]const u8, port: c_int) status_t;
+pub extern fn amqp_socket_open_noblock(self: *socket_t, host: [*:0]const u8, port: c_int, timeout: ?*c.timeval) status_t;
 
 pub extern fn amqp_tcp_socket_new(state: *connection_state_t) ?*socket_t;
 pub extern fn amqp_tcp_socket_set_sockfd(self: *socket_t, sockfd: c_int) void;
@@ -64,6 +65,7 @@ pub extern fn amqp_queue_declare(
     arguments: table_t,
 ) ?*queue_declare_ok_t;
 pub extern fn amqp_basic_ack(state: *connection_state_t, channel: channel_t, delivery_tag: u64, multiple: boolean_t) status_t;
+pub extern fn amqp_basic_reject(state: *connection_state_t, channel: channel_t, delivery_tag: u64, requeue: boolean_t) status_t;
 pub extern fn amqp_channel_close(state: *connection_state_t, channel: channel_t, code: c_int) RpcReply;
 pub extern fn amqp_maybe_release_buffers_on_channel(state: *connection_state_t, channel: channel_t) void;
 
