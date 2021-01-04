@@ -23,7 +23,6 @@ pub const bytes_t = extern struct {
         return (self.bytes orelse return null)[0..self.len];
     }
 
-    extern fn amqp_cstring_bytes(cstr: [*:0]const u8) bytes_t;
     pub const initZ = amqp_cstring_bytes;
 
     pub fn empty() bytes_t {
@@ -58,6 +57,9 @@ pub const DEFAULT_FRAME_SIZE: c_int = 131072;
 pub const DEFAULT_MAX_CHANNELS: c_int = 2047;
 // pub const DEFAULT_HEARTBEAT: c_int = 0;
 // pub const DEFAULT_VHOST = "/";
+
+pub const version_number = amqp_version_number;
+pub const version = amqp_version;
 
 pub const Connection = struct {
     handle: *connection_state_t,
@@ -289,10 +291,10 @@ pub const SslSocket = struct {
     }
 
     const TlsVersion = extern enum(c_int) {
-        AMQP_TLSv1 = 1,
-        AMQP_TLSv1_1 = 2,
-        AMQP_TLSv1_2 = 3,
-        AMQP_TLSvLATEST = 65535,
+        v1 = 1,
+        v1_1 = 2,
+        v1_2 = 3,
+        vLATEST = 65535,
         _,
     };
 };
@@ -338,28 +340,28 @@ pub const RpcReply = extern struct {
 /// Do not use fields directly to avoid bugs.
 pub const BasicProperties = extern struct {
     _flags: flags_t,
-    content_type: bytes_t,
-    content_encoding: bytes_t,
-    headers: table_t,
-    delivery_mode: u8,
-    priority: u8,
-    correlation_id: bytes_t,
-    reply_to: bytes_t,
-    expiration: bytes_t,
-    message_id: bytes_t,
-    timestamp: u64,
-    type_: bytes_t,
-    user_id: bytes_t,
-    app_id: bytes_t,
-    cluster_id: bytes_t,
+    _content_type: bytes_t,
+    _content_encoding: bytes_t,
+    _headers: table_t,
+    _delivery_mode: u8,
+    _priority: u8,
+    _correlation_id: bytes_t,
+    _reply_to: bytes_t,
+    _expiration: bytes_t,
+    _message_id: bytes_t,
+    _timestamp: u64,
+    _type_: bytes_t,
+    _user_id: bytes_t,
+    _app_id: bytes_t,
+    _cluster_id: bytes_t,
 
     pub fn init(fields: anytype) BasicProperties {
         var props: BasicProperties = undefined;
         props._flags = 0;
 
         inline for (meta.fields(@TypeOf(fields))) |f| {
-            @field(props, f.name) = @field(fields, f.name);
-            props._flags |= @enumToInt(@field(BasicProperties.Flag, f.name));
+            @field(props, "_" ++ f.name) = @field(fields, f.name);
+            props._flags |= @enumToInt(@field(Flag, f.name));
         }
 
         return props;
@@ -367,16 +369,16 @@ pub const BasicProperties = extern struct {
 
     pub fn get(self: BasicProperties, comptime flag: Flag) ?flag.Type() {
         if (self._flags & @enumToInt(flag) == 0) return null;
-        return @field(self, @tagName(flag));
+        return @field(self, "_" ++ @tagName(flag));
     }
 
     pub fn set(self: *BasicProperties, comptime flag: Flag, value: ?flag.Type()) void {
         if (value) |val| {
             self._flags |= @enumToInt(flag);
-            @field(self, @tagName(flag)) = val;
+            @field(self, "_" ++ @tagName(flag)) = val;
         } else {
             self._flags &= ~@enumToInt(flag);
-            @field(self, @tagName(flag)) = undefined;
+            @field(self, "_" ++ @tagName(flag)) = undefined;
         }
     }
 
@@ -398,7 +400,7 @@ pub const BasicProperties = extern struct {
         _,
 
         pub fn Type(flag: Flag) type {
-            return meta.fieldInfo(BasicProperties, @tagName(flag)).field_type;
+            return meta.fieldInfo(BasicProperties, "_" ++ @tagName(flag)).field_type;
         }
     };
 };
@@ -469,6 +471,7 @@ pub const Frame = extern struct {
         METHOD = 1,
         HEADER = 2,
         BODY = 3,
+        HEARTBEAT = 8,
         _,
     };
 };
@@ -579,7 +582,6 @@ pub const status_t = extern enum(c_int) {
         };
     }
 
-    extern fn amqp_error_string2(err: status_t) [*:0]const u8;
     pub const string = amqp_error_string2;
 };
 

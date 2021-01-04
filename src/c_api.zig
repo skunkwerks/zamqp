@@ -1,6 +1,11 @@
 const c = @import("std").c;
 usingnamespace @import("zamqp.zig");
 
+pub extern fn amqp_version_number() u32;
+pub extern fn amqp_version() [*:0]const u8;
+pub extern fn amqp_error_string2(err: status_t) [*:0]const u8;
+pub extern fn amqp_cstring_bytes(cstr: [*:0]const u8) bytes_t;
+
 // Connection
 pub const connection_state_t = opaque {};
 
