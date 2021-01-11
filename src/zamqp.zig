@@ -269,10 +269,6 @@ pub const SslSocket = struct {
         return amqp_ssl_socket_set_key_buffer(self.handle, cert, key.ptr, key.len).ok();
     }
 
-    pub fn set_verify(self: SslSocket, verify: bool) void {
-        amqp_ssl_socket_set_verify(self.handle, @boolToInt(verify));
-    }
-
     pub fn set_verify_peer(self: SslSocket, verify: bool) void {
         amqp_ssl_socket_set_verify_peer(self.handle, @boolToInt(verify));
     }

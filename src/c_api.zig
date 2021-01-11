@@ -26,11 +26,10 @@ pub extern fn amqp_socket_open_noblock(self: *socket_t, host: [*:0]const u8, por
 pub extern fn amqp_tcp_socket_new(state: *connection_state_t) ?*socket_t;
 pub extern fn amqp_tcp_socket_set_sockfd(self: *socket_t, sockfd: c_int) void;
 
-pub extern fn amqp_ssl_socket_new(state: *connection_state_t) ?*amqp_socket_t;
+pub extern fn amqp_ssl_socket_new(state: *connection_state_t) ?*socket_t;
 pub extern fn amqp_ssl_socket_set_cacert(self: *socket_t, cacert: [*:0]const u8) status_t;
 pub extern fn amqp_ssl_socket_set_key(self: *socket_t, cert: [*:0]const u8, key: [*:0]const u8) status_t;
 pub extern fn amqp_ssl_socket_set_key_buffer(self: *socket_t, cert: [*:0]const u8, key: ?*const c_void, n: usize) status_t;
-pub extern fn amqp_ssl_socket_set_verify(self: *socket_t, verify: boolean_t) void;
 pub extern fn amqp_ssl_socket_set_verify_peer(self: *socket_t, verify: boolean_t) void;
 pub extern fn amqp_ssl_socket_set_verify_hostname(self: *socket_t, verify: boolean_t) void;
 pub extern fn amqp_ssl_socket_set_ssl_versions(self: *socket_t, min: tls_version_t, max: tls_version_t) status_t;
