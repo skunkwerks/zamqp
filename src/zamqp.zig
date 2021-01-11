@@ -1,4 +1,5 @@
 const std = @import("std");
+const mem = std.mem;
 const meta = std.meta;
 const c = std.c;
 
@@ -396,7 +397,11 @@ pub const BasicProperties = extern struct {
         _,
 
         pub fn Type(flag: Flag) type {
-            return meta.fieldInfo(BasicProperties, "_" ++ @tagName(flag)).field_type;
+            const needle = "_" ++ @tagName(flag);
+            inline for (comptime meta.fields(BasicProperties)) |field| {
+                if (comptime mem.eql(u8, field.name, needle)) return field.field_type;
+            }
+            unreachable;
         }
     };
 };
