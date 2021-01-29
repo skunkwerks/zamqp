@@ -220,6 +220,16 @@ pub const Channel = struct {
         return amqp_basic_reject(self.connection.handle, self.number, delivery_tag, @boolToInt(requeue)).ok();
     }
 
+    pub fn basic_qos(self: Channel, prefetch_size: u32, prefetch_count: u16, global: bool) !*basic_qos_ok_t {
+        return amqp_basic_qos(
+            self.connection.handle,
+            self.number,
+            prefetch_size,
+            prefetch_count,
+            @boolToInt(global),
+        ) orelse self.connection.last_rpc_reply().err();
+    }
+
     pub fn read_message(self: Channel, flags: c_int) !Message {
         var msg: Message = undefined;
         try amqp_read_message(self.connection.handle, self.number, &msg, flags).ok();
@@ -708,4 +718,8 @@ pub const channel_close_t = extern struct {
     reply_text: bytes_t,
     class_id: u16,
     method_id: u16,
+};
+
+pub const basic_qos_ok_t = extern struct {
+    dummy: u8,
 };

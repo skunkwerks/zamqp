@@ -70,6 +70,7 @@ pub extern fn amqp_queue_declare(
 ) ?*queue_declare_ok_t;
 pub extern fn amqp_basic_ack(state: *connection_state_t, channel: channel_t, delivery_tag: u64, multiple: boolean_t) status_t;
 pub extern fn amqp_basic_reject(state: *connection_state_t, channel: channel_t, delivery_tag: u64, requeue: boolean_t) status_t;
+pub extern fn amqp_basic_qos(state: *connection_state_t, channel: channel_t, prefetch_size: u32, prefetch_count: u16, global: boolean_t) ?*basic_qos_ok_t;
 pub extern fn amqp_channel_close(state: *connection_state_t, channel: channel_t, code: c_int) RpcReply;
 pub extern fn amqp_maybe_release_buffers_on_channel(state: *connection_state_t, channel: channel_t) void;
 
