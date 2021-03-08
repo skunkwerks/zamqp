@@ -62,6 +62,24 @@ pub const DEFAULT_MAX_CHANNELS: c_int = 2047;
 pub const version_number = amqp_version_number;
 pub const version = amqp_version;
 
+pub const ConnectionInfo = extern struct {
+    user: [*:0]u8,
+    password: [*:0]u8,
+    host: [*:0]u8,
+    vhost: [*:0]u8,
+    port: c_int,
+    ssl: boolean_t,
+};
+
+pub fn parse_url(url: [*:0]u8) error{ BadUrl, Unexpected }!ConnectionInfo {
+    var result: ConnectionInfo = undefined;
+    return switch (amqp_parse_url(url, &result)) {
+        .OK => result,
+        .BAD_URL => error.BadUrl,
+        else => |code| unexpected(code),
+    };
+}
+
 pub const Connection = struct {
     handle: *connection_state_t,
 
@@ -143,6 +161,31 @@ pub const Channel = struct {
         return amqp_channel_close(self.connection.handle, self.number, @enumToInt(code)).ok();
     }
 
+    pub fn exchange_declare(
+        self: Channel,
+        exchange: bytes_t,
+        type_: bytes_t,
+        extra: struct {
+            passive: bool = false,
+            durable: bool = false,
+            auto_delete: bool = false,
+            internal: bool = false,
+            arguments: table_t = table_t.empty(),
+        },
+    ) !void {
+        _ = amqp_exchange_declare(
+            self.connection.handle,
+            self.number,
+            exchange,
+            type_,
+            @boolToInt(extra.passive),
+            @boolToInt(extra.durable),
+            @boolToInt(extra.auto_delete),
+            @boolToInt(extra.internal),
+            extra.arguments,
+        ) orelse return self.connection.last_rpc_reply().err();
+    }
+
     pub fn queue_declare(
         self: Channel,
         queue: bytes_t,
@@ -164,6 +207,10 @@ pub const Channel = struct {
             @boolToInt(extra.auto_delete),
             extra.arguments,
         ) orelse self.connection.last_rpc_reply().err();
+    }
+
+    pub fn queue_bind(self: Channel, queue: bytes_t, exchange: bytes_t, routing_key: bytes_t, arguments: table_t) !void {
+        _ = amqp_queue_bind(self.connection.handle, self.number, queue, exchange, routing_key, arguments) orelse return self.connection.last_rpc_reply().err();
     }
 
     pub fn basic_publish(
@@ -220,14 +267,14 @@ pub const Channel = struct {
         return amqp_basic_reject(self.connection.handle, self.number, delivery_tag, @boolToInt(requeue)).ok();
     }
 
-    pub fn basic_qos(self: Channel, prefetch_size: u32, prefetch_count: u16, global: bool) !*basic_qos_ok_t {
-        return amqp_basic_qos(
+    pub fn basic_qos(self: Channel, prefetch_size: u32, prefetch_count: u16, global: bool) !void {
+        _ = amqp_basic_qos(
             self.connection.handle,
             self.number,
             prefetch_size,
             prefetch_count,
             @boolToInt(global),
-        ) orelse self.connection.last_rpc_reply().err();
+        ) orelse return self.connection.last_rpc_reply().err();
     }
 
     pub fn read_message(self: Channel, flags: c_int) !Message {
@@ -702,10 +749,6 @@ pub const basic_consume_ok_t = extern struct {
     consumer_tag: bytes_t,
 };
 
-pub const queue_bind_ok_t = extern struct {
-    dummy: u8,
-};
-
 pub const connection_close_t = extern struct {
     reply_code: ReplyCode,
     reply_text: bytes_t,
@@ -718,8 +761,4 @@ pub const channel_close_t = extern struct {
     reply_text: bytes_t,
     class_id: u16,
     method_id: u16,
-};
-
-pub const basic_qos_ok_t = extern struct {
-    dummy: u8,
 };
