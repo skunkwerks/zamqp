@@ -315,16 +315,16 @@ pub const SslSocket = struct {
         return amqp_socket_open_noblock(self.handle, host, port, timeout).ok();
     }
 
-    pub fn set_cacert(self: SslSocket, cacert: [*:0]const u8) !void {
-        return amqp_ssl_socket_set_cacert(self.handle, cacert).ok();
+    pub fn set_cacert(self: SslSocket, cacert_path: [*:0]const u8) !void {
+        return amqp_ssl_socket_set_cacert(self.handle, cacert_path).ok();
     }
 
-    pub fn set_keyZ(self: SslSocket, cert: [*:0]const u8, key: [*:0]const u8) !void {
-        return amqp_ssl_socket_set_key(self.handle, cert, key).ok();
+    pub fn set_key(self: SslSocket, cert_path: [*:0]const u8, key_path: [*:0]const u8) !void {
+        return amqp_ssl_socket_set_key(self.handle, cert_path, key_path).ok();
     }
 
-    pub fn set_key(self: SslSocket, cert: [*:0]const u8, key: []const u8) !void {
-        return amqp_ssl_socket_set_key_buffer(self.handle, cert, key.ptr, key.len).ok();
+    pub fn set_key_buffer(self: SslSocket, cert_path: [*:0]const u8, key: []const u8) !void {
+        return amqp_ssl_socket_set_key_buffer(self.handle, cert_path, key.ptr, key.len).ok();
     }
 
     pub fn set_verify_peer(self: SslSocket, verify: bool) void {
